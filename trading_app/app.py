@@ -1,4 +1,4 @@
-# app.py — versione finale per Render con Alpha Vantage e fallback immediato
+# app.py — versione gratuita per Render con Alpha Vantage (endpoint free)
 from flask import Flask, jsonify, render_template
 import threading
 import time
@@ -23,14 +23,15 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def fetch_alpha_vantage(ticker: str) -> pd.DataFrame:
+    """Scarica dati gratuiti da Alpha Vantage (endpoint free)."""
     ts = TimeSeries(key=API_KEY, output_format='pandas')
-    data, _ = ts.get_daily_adjusted(symbol=ticker, outputsize='compact')
+    data, _ = ts.get_daily(symbol=ticker, outputsize='compact')  # <-- endpoint free
     data = data.rename(columns={
         '1. open': 'Open',
         '2. high': 'High',
         '3. low': 'Low',
         '4. close': 'Close',
-        '6. volume': 'Volume'
+        '5. volume': 'Volume'
     })
     data.index = pd.to_datetime(data.index)
     data = data.sort_index()
@@ -72,7 +73,7 @@ def get_data(ticker):
         if ticker in DATA and DATA[ticker]:
             return jsonify(DATA[ticker])
 
-    # se non ci sono ancora dati, li scarico subito
+    # Se non ci sono ancora dati, li scarico al volo
     try:
         df = fetch_alpha_vantage(ticker)
         df = generate_signals(df)
@@ -104,4 +105,3 @@ start_background_thread()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-

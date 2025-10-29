@@ -23,28 +23,14 @@
 
 </head>
 <body>
-    <div class="container">
-        <h1>📈 Trading Dashboard</h1>
+    <h1>Trading Dashboard</h1>
+    <select id="tickerSelect"></select>
+    <div id="chart"></div>
 
-        <!-- 🔹 Barra informazioni -->
-        <div id="info-bar">
-            <div><strong>Titolo:</strong> <span id="info-ticker">–</span></div>
-            <div><strong>RSI:</strong> <span id="info-rsi">–</span></div>
-            <div><strong>MACD:</strong> <span id="info-macd">–</span></div>
-            <div><strong>Segnale:</strong> <span id="info-signal">–</span></div>
-        </div>
+    <!-- Libreria Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-        <div id="ticker-selector">
-            <select id="tickerSelect"></select>
-            <button onclick="aggiornaDati()">Aggiorna</button>
-        </div>
-
-        <div id="grafico"></div>
-        <div id="info"></div>
-    </div>
-
+    <!-- Script principale -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
-
-

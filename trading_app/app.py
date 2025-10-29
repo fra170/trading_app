@@ -81,3 +81,4 @@ def get_data(ticker):
 if __name__ == "__main__":
     threading.Thread(target=update_data, daemon=True).start()
     app.run(host="0.0.0.0", port=5000)
+

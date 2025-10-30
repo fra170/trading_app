@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trading Dashboard</title>
 
-  <!-- Stile principale -->
+  <!-- Stile -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-  <!-- ✅ Plotly aggiornato (ottobre 2025) -->
+  <!-- ✅ Versione aggiornata di Plotly -->
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 
-  <!-- Manifest e colori tema -->
+  <!-- Manifest e tema -->
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#1e1e1e">
 
@@ -26,30 +26,122 @@
 </head>
 
 <body>
-  <header>
+  <div class="container">
     <h1>📊 Trading Dashboard</h1>
     <p>Segnali tecnici in tempo (quasi) reale</p>
-  </header>
 
-  <main>
     <div class="controls">
       <label for="tickerSelect">Ticker:</label>
       <select id="tickerSelect"></select>
-      <button id="toggleView">🕯 Candlestick / 📈 Lineare</button>
+      <button id="switchBtn">🕯 Candlestick / 📈 Lineare</button>
       <button id="refreshBtn">🔄 Aggiorna</button>
     </div>
 
-    <div class="stats">
+    <div class="info">
       <p>Ultimo prezzo: <span id="lastPrice">--</span></p>
-      <p>Segnale: <span id="signal">--</span></p>
-      <p>RSI: <span id="rsi">--</span></p>
-      <p>MACD: <span id="macd">--</span></p>
+      <p>Segnale: <span id="lastSignal">--</span></p>
+      <p>RSI: <span id="rsiValue">--</span></p>
+      <p>MACD: <span id="macdValue">--</span></p>
     </div>
 
     <!-- Indicatore di caricamento -->
-    <div id="loading" style="display:none; text-align:center; margin-top:20px;">
-      <p>⏳ Caricamento grafico in corso...</p>
-    </div>
+    <div id="loading">⏳ Caricamento dati in corso...</div>
 
-    <!-- Area grafico -->
-    <div id="chart" style="width:100%; height:600px; margin-top:20px;"></
+    <!-- Grafico -->
+    <div id="chart"></div>
+  </div>
+
+  <!-- Script principale -->
+  <script>
+    const API_BASE = window.location.origin;
+    const TICKERS = ["MSFT", "AAPL", "NVDA"];
+    let useCandlestick = false;
+
+    window.onload = () => {
+      const select = document.getElementById("tickerSelect");
+      TICKERS.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        select.appendChild(opt);
+      });
+
+      document.getElementById("switchBtn").onclick = () => {
+        useCandlestick = !useCandlestick;
+        aggiornaDati();
+      };
+
+      document.getElementById("refreshBtn").onclick = aggiornaDati;
+
+      aggiornaDati(); // Primo caricamento
+    };
+
+    async function aggiornaDati() {
+      const ticker = document.getElementById("tickerSelect").value || TICKERS[0];
+      document.getElementById("loading").style.display = "block";
+
+      try {
+        const res = await fetch(`${API_BASE}/data/${ticker}`);
+        const data = await res.json();
+
+        if (data.error) {
+          alert("Errore: " + data.error);
+          document.getElementById("loading").style.display = "none";
+          return;
+        }
+
+        const prezzi = data.data.map(d => ({
+          x: d.Date,
+          y: d.Close,
+          open: d.Open,
+          high: d.High,
+          low: d.Low,
+          close: d.Close
+        }));
+
+        const trace = useCandlestick
+          ? {
+              x: prezzi.map(p => p.x),
+              open: prezzi.map(p => p.open),
+              high: prezzi.map(p => p.high),
+              low: prezzi.map(p => p.low),
+              close: prezzi.map(p => p.close),
+              type: "candlestick",
+              name: ticker
+            }
+          : {
+              x: prezzi.map(p => p.x),
+              y: prezzi.map(p => p.y),
+              type: "scatter",
+              mode: "lines",
+              line: { color: "#4CAF50" },
+              name: ticker
+            };
+
+        const layout = {
+          title: `${ticker} - Andamento Prezzi`,
+          paper_bgcolor: "#1e1e1e",
+          plot_bgcolor: "#1e1e1e",
+          font: { color: "#fff" },
+          xaxis: { title: "Data" },
+          yaxis: { title: "Prezzo" }
+        };
+
+        Plotly.newPlot("chart", [trace], layout);
+
+        document.getElementById("lastPrice").textContent = data.last_price || "--";
+        document.getElementById("lastSignal").textContent = data.last_signal || "--";
+
+        const last = data.data[data.data.length - 1];
+        document.getElementById("rsiValue").textContent = last.RSI ? last.RSI.toFixed(2) : "--";
+        document.getElementById("macdValue").textContent = last.MACD ? last.MACD.toFixed(2) : "--";
+
+      } catch (err) {
+        alert("Errore nel caricamento dati: " + err);
+      }
+
+      document.getElementById("loading").style.display = "none";
+    }
+  </script>
+</body>
+</html>

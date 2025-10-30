@@ -177,18 +177,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       // --- Layout ---
-      const layout = {
-        grid: { rows: 3, columns: 1, pattern: "independent" },
-        height: 900,
-        paper_bgcolor: "#111",
-        plot_bgcolor: "#111",
-        font: { color: "#fff" },
-        showlegend: true,
-        yaxis: { title: "Prezzo" },
-        yaxis2: { title: "RSI", range: [0, 100] },
-        yaxis3: { title: "MACD" },
-        shapes: [...rsiShapes]
-      };
+     const layout = {
+  grid: { rows: 3, columns: 1, pattern: "independent" },
+  height: 900,
+  paper_bgcolor: "#111",
+  plot_bgcolor: "#111",
+  font: { color: "#fff" },
+  showlegend: true,
+  
+  // 🔹 Assegna proporzioni di spazio
+  yaxis: { title: "Prezzo", domain: [0.40, 1.00] },   // parte alta, più grande
+  yaxis2: { title: "RSI", domain: [0.20, 0.38], range: [0, 100] },
+  yaxis3: { title: "MACD", domain: [0.00, 0.18] },
+  
+  shapes: [...rsiShapes]
+};
+
 
       const traces = [traceCandles, traceSMA20, traceSMA50, traceRSI, traceMACD, traceMACDSignal, traceMACDHist];
       if (traceBUY) traces.push(traceBUY);
@@ -224,3 +228,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadTickers();
   await updateChart();
 });
+

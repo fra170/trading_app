@@ -4,26 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Trading</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
   <style>
     body {
-      background-color: #111;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
       color: #fff;
-      font-family: "Segoe UI", Arial, sans-serif;
       margin: 0;
       padding: 0;
     }
 
     header {
-      text-align: center;
-      padding: 15px;
       background-color: #1e1e1e;
+      text-align: center;
+      padding: 20px 10px;
       font-size: 1.6em;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      color: #00bcd4;
     }
 
-    #ticker-controls {
+    #controls {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -32,85 +33,100 @@
       flex-wrap: wrap;
     }
 
-    #ticker-controls input, #ticker-controls select, #ticker-controls button {
-      padding: 8px 10px;
-      font-size: 1em;
+    select, button {
+      padding: 8px 12px;
       border-radius: 6px;
       border: none;
-      outline: none;
-    }
-
-    #ticker-controls input, #ticker-controls select {
-      background-color: #222;
-      color: #fff;
-    }
-
-    #ticker-controls button {
-      background-color: #00bcd4;
+      background-color: #2a2a2a;
       color: white;
+      font-size: 0.95em;
       cursor: pointer;
-      transition: 0.2s;
     }
 
-    #ticker-controls button:hover {
-      background-color: #0097a7;
+    button:hover {
+      background-color: #00bcd4;
     }
 
-    #info-panel {
+    #period-controls {
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 15px;
       flex-wrap: wrap;
-      gap: 15px;
-      text-align: center;
-      margin: 10px 15px;
-      font-size: 1.05em;
     }
 
-    #info-panel div {
-      background-color: #1c1c1c;
-      padding: 8px 12px;
-      border-radius: 8px;
-      min-width: 140px;
+    .period-btn {
+      background-color: #2a2a2a;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .period-btn:hover {
+      background-color: #00bcd4;
+    }
+
+    #stats {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-top: 1px solid #333;
+      border-bottom: 1px solid #333;
+    }
+
+    .stat {
+      text-align: center;
     }
 
     #chart {
-      width: 100%;
-      height: 900px;
+      width: 95%;
+      margin: 20px auto;
     }
 
     #loading {
       text-align: center;
-      padding: 20px;
-      font-size: 1.1em;
       color: #aaa;
+      margin-top: 50px;
     }
   </style>
 </head>
 
 <body>
-  <header>📈 Dashboard Trading</header>
+  <header>📊 Dashboard Trading</header>
 
-  <!-- 🔹 Controlli titoli -->
-  <div id="ticker-controls">
-    <select id="tickerSelect"></select>
-    <input type="text" id="tickerInput" placeholder="Es. TSLA o ENI.MI">
-    <button id="addTicker">➕ Aggiungi titolo</button>
+  <div id="controls">
+    <select id="ticker">
+      <option value="AAPL">Apple (AAPL)</option>
+      <option value="MSFT">Microsoft (MSFT)</option>
+      <option value="NVDA">NVIDIA (NVDA)</option>
+    </select>
+    <button id="updateButton">Aggiorna Grafico</button>
   </div>
 
-  <!-- 🔹 Pannello informazioni -->
-  <div id="info-panel">
-    <div><strong>💰 Prezzo attuale:</strong> <span id="lastPrice">--</span></div>
-    <div><strong>📊 Segnale:</strong> <span id="lastSignal">--</span></div>
-    <div><strong>📈 RSI:</strong> <span id="rsiValue">--</span></div>
-    <div><strong>📉 MACD:</strong> <span id="macdValue">--</span></div>
+  <div id="period-controls">
+    <button class="period-btn" data-days="7">1 settimana</button>
+    <button class="period-btn" data-days="30">1 mese</button>
+    <button class="period-btn" data-days="60">2 mesi</button>
+    <button class="period-btn" data-days="90">3 mesi</button>
+    <button class="period-btn" data-days="all">Tutto</button>
   </div>
 
-  <!-- 🔹 Grafico -->
+  <div id="stats">
+    <div class="stat">Prezzo Attuale: <span id="lastPrice">--</span></div>
+    <div class="stat">RSI: <span id="rsiValue">--</span></div>
+    <div class="stat">MACD: <span id="macdValue">--</span></div>
+    <div class="stat">Segnale: <span id="lastSignal">--</span></div>
+  </div>
+
   <div id="chart"></div>
   <div id="loading">Caricamento in corso...</div>
 
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>
-
-

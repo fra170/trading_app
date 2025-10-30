@@ -1,19 +1,34 @@
 document.addEventListener("DOMContentLoaded", () => {
   const chartDiv = document.getElementById("chart");
   const loadingDiv = document.getElementById("loading");
-  const updateButton = document.getElementById("updateButton");
+  const addButton = document.getElementById("addTicker");
+  const tickerInput = document.getElementById("tickerInput");
+  const tickerSelect = document.getElementById("tickerSelect");
 
-  // Titolo di default
   let currentTicker = "MSFT";
+
+  async function loadTickers() {
+    const res = await fetch("/tickers");
+    const tickers = await res.json();
+    tickerSelect.innerHTML = "";
+    tickers.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      tickerSelect.appendChild(opt);
+    });
+    if (!tickers.includes(currentTicker)) currentTicker = tickers[0];
+    tickerSelect.value = currentTicker;
+  }
 
   async function fetchData() {
     try {
       const response = await fetch(`/data/${currentTicker}`);
-      if (!response.ok) throw new Error(`Errore HTTP ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const json = await response.json();
       return json.data || [];
     } catch (err) {
-      console.error("Errore nel recupero dati:", err);
+      console.error("Errore dati:", err);
       return [];
     }
   }
@@ -24,63 +39,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const data = await fetchData();
     if (data.length === 0) {
-      loadingDiv.textContent = "Nessun dato disponibile o errore nel caricamento.";
+      loadingDiv.textContent = "Nessun dato disponibile.";
       return;
     }
 
-    // Estrazione colonne principali
     const dates = data.map(d => d.Date);
-    const close = data.map(d => d.Close);
-    const sma20 = data.map(d => d.SMA_20);
-    const sma50 = data.map(d => d.SMA_50);
-    const rsi = data.map(d => d.RSI);
-    const macd = data.map(d => d.MACD);
-    const macdSignal = data.map(d => d.MACD_Signal);
-    const macdHist = data.map(d => d.MACD_Hist);
-
-  // === GRAFICO CANDELE PRINCIPALE ===
-const tracePrice = {
-  x: dates,
-  open: data.map(d => d.Open),
-  high: data.map(d => d.High),
-  low: data.map(d => d.Low),
-  close: data.map(d => d.Close),
-  type: "candlestick",
-  name: "Prezzo",
-  increasing: { line: { color: "#00e676" }, fillcolor: "#00e676" },
-  decreasing: { line: { color: "#e53935" }, fillcolor: "#e53935" },
-  yaxis: "y1"
-};
- 
-    const traceSMA20 = {
+    const traceCandles = {
       x: dates,
-      y: sma20,
-      type: "scatter",
-      mode: "lines",
-      name: "SMA 20",
+      open: data.map(d => d.Open),
+      high: data.map(d => d.High),
+      low: data.map(d => d.Low),
+      close: data.map(d => d.Close),
+      type: "candlestick",
+      name: currentTicker,
+      increasing: { line: { color: "#00e676" } },
+      decreasing: { line: { color: "#e53935" } },
+      yaxis: "y1"
+    };
+
+    const traceSMA20 = {
+      x: dates, y: data.map(d => d.SMA_20),
+      type: "scatter", mode: "lines", name: "SMA 20",
       line: { color: "#42a5f5", width: 1.5, dash: "dot" },
       yaxis: "y1"
     };
 
     const traceSMA50 = {
-      x: dates,
-      y: sma50,
-      type: "scatter",
-      mode: "lines",
-      name: "SMA 50",
+      x: dates, y: data.map(d => d.SMA_50),
+      type: "scatter", mode: "lines", name: "SMA 50",
       line: { color: "#ffb300", width: 1.5, dash: "dot" },
       yaxis: "y1"
     };
 
-    // === GRAFICO RSI ===
     const traceRSI = {
-      x: dates,
-      y: rsi,
-      type: "scatter",
-      mode: "lines",
-      name: "RSI",
-      line: { color: "#ab47bc", width: 1.8 },
-      yaxis: "y2"
+      x: dates, y: data.map(d => d.RSI),
+      type: "scatter", mode: "lines", name: "RSI",
+      line: { color: "#ab47bc", width: 1.8 }, yaxis: "y2"
     };
 
     const rsiShapes = [
@@ -88,78 +82,63 @@ const tracePrice = {
       { type: "line", xref: "x", yref: "y2", x0: dates[0], x1: dates[dates.length - 1], y0: 30, y1: 30, line: { color: "green", width: 1, dash: "dash" }}
     ];
 
-    // === GRAFICO MACD ===
     const traceMACD = {
-      x: dates,
-      y: macd,
-      type: "scatter",
-      mode: "lines",
-      name: "MACD",
-      line: { color: "#00bcd4", width: 1.8 },
-      yaxis: "y3"
+      x: dates, y: data.map(d => d.MACD),
+      type: "scatter", mode: "lines", name: "MACD",
+      line: { color: "#00bcd4", width: 1.8 }, yaxis: "y3"
     };
 
     const traceMACDSignal = {
-      x: dates,
-      y: macdSignal,
-      type: "scatter",
-      mode: "lines",
-      name: "Signal",
-      line: { color: "#ff7043", width: 1.5, dash: "dot" },
-      yaxis: "y3"
+      x: dates, y: data.map(d => d.MACD_Signal),
+      type: "scatter", mode: "lines", name: "Signal",
+      line: { color: "#ff7043", width: 1.5, dash: "dot" }, yaxis: "y3"
     };
 
     const traceMACDHist = {
-      x: dates,
-      y: macdHist,
-      type: "bar",
-      name: "Istogramma",
-      marker: { color: macdHist.map(v => v >= 0 ? "#4caf50" : "#e53935") },
+      x: dates, y: data.map(d => d.MACD_Hist),
+      type: "bar", name: "Istogramma",
+      marker: { color: data.map(d => d.MACD_Hist >= 0 ? "#4caf50" : "#e53935") },
       yaxis: "y3"
     };
 
-    // === LAYOUT COMPLETO ===
     const layout = {
       grid: { rows: 3, columns: 1, pattern: "independent" },
       height: 900,
-      paper_bgcolor: "#111",
-      plot_bgcolor: "#111",
+      paper_bgcolor: "#111", plot_bgcolor: "#111",
       font: { color: "#fff" },
-      margin: { t: 40, b: 40 },
       showlegend: true,
-      xaxis: { showgrid: true, color: "#aaa" },
-      yaxis: { title: "Prezzo", color: "#aaa" },
-      yaxis2: { title: "RSI", range: [0, 100], color: "#aaa" },
-      yaxis3: { title: "MACD", color: "#aaa" },
+      yaxis: { title: "Prezzo" },
+      yaxis2: { title: "RSI", range: [0, 100] },
+      yaxis3: { title: "MACD" },
       shapes: [...rsiShapes]
     };
 
-    const config = {
-      responsive: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ["lasso2d", "select2d"]
-    };
+    const allTraces = [traceCandles, traceSMA20, traceSMA50, traceRSI, traceMACD, traceMACDSignal, traceMACDHist];
+    Plotly.newPlot(chartDiv, allTraces, layout, { responsive: true });
 
-    // Unione di tutte le tracce
-    const allTraces = [tracePrice, traceSMA20, traceSMA50, traceRSI, traceMACD, traceMACDSignal, traceMACDHist];
-
-    Plotly.newPlot(chartDiv, allTraces, layout, config);
-
-    // Aggiornamento valori numerici
     const last = data[data.length - 1];
-    document.getElementById("lastPrice").textContent = last.Close ? last.Close.toFixed(2) : "--";
+    document.getElementById("lastPrice").textContent = last.Close?.toFixed(2) || "--";
     document.getElementById("lastSignal").textContent = last.Signal || "--";
-    document.getElementById("rsiValue").textContent = last.RSI ? last.RSI.toFixed(2) : "--";
-    document.getElementById("macdValue").textContent = last.MACD ? last.MACD.toFixed(2) : "--";
+    document.getElementById("rsiValue").textContent = last.RSI?.toFixed(2) || "--";
+    document.getElementById("macdValue").textContent = last.MACD?.toFixed(2) || "--";
 
     loadingDiv.style.display = "none";
   }
 
-  updateButton.addEventListener("click", updateChart);
+  tickerSelect.addEventListener("change", e => {
+    currentTicker = e.target.value;
+    updateChart();
+  });
 
-  // Caricamento iniziale
-  updateChart();
+  addButton.addEventListener("click", async () => {
+    const ticker = tickerInput.value.trim();
+    if (!ticker) return alert("Inserisci un ticker valido.");
+    await fetch(`/tickers/add/${ticker}`, { method: "POST" });
+    tickerInput.value = "";
+    await loadTickers();
+    currentTicker = ticker.toUpperCase();
+    updateChart();
+  });
+
+  loadTickers().then(updateChart);
 });
-
-
-

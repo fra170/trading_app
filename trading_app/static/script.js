@@ -4,9 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchData() {
         const ticker = tickerInput.value || "MSFT";
-        const response = await fetch(`/data?ticker=${ticker}`);
+        const response = await fetch(`/data/${ticker}`);
         const data = await response.json();
-        return data;
+        return data.data; // estrai solo i dati reali dal JSON
     }
 
     async function updateChart() {
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const macdSignal = data.map(item => item.MACD_Signal);
         const macdHist = data.map(item => item.MACD_Hist);
 
-        // === GRAFICO PRINCIPALE (Prezzo + SMA) ===
+        // === GRAFICO PREZZO + MEDIE MOBILI ===
         const tracePrice = {
             x: dates,
             y: close,
@@ -29,7 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#1f77b4", width: 2 },
-            yaxis: "y1"
+            xaxis: "x",
+            yaxis: "y"
         };
 
         const traceSMA20 = {
@@ -39,7 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#ff7f0e", width: 1.5, dash: "dot" },
-            yaxis: "y1"
+            xaxis: "x",
+            yaxis: "y"
         };
 
         const traceSMA50 = {
@@ -49,7 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#2ca02c", width: 1.5, dash: "dot" },
-            yaxis: "y1"
+            xaxis: "x",
+            yaxis: "y"
         };
 
         // === GRAFICO RSI ===
@@ -60,19 +63,20 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#9467bd", width: 1.8 },
+            xaxis: "x2",
             yaxis: "y2"
         };
 
-        // === Linee orizzontali RSI ===
+        // Linee orizzontali RSI
         const rsiShapes = [
             {
-                type: "line", xref: "x", yref: "y2",
+                type: "line", xref: "x2", yref: "y2",
                 x0: dates[0], x1: dates[dates.length - 1],
                 y0: 70, y1: 70,
                 line: { color: "red", width: 1, dash: "dash" }
             },
             {
-                type: "line", xref: "x", yref: "y2",
+                type: "line", xref: "x2", yref: "y2",
                 x0: dates[0], x1: dates[dates.length - 1],
                 y0: 30, y1: 30,
                 line: { color: "green", width: 1, dash: "dash" }
@@ -87,6 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#17becf", width: 1.8 },
+            xaxis: "x3",
             yaxis: "y3"
         };
 
@@ -97,6 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
             type: "scatter",
             mode: "lines",
             line: { color: "#ff7f0e", width: 1.5, dash: "dot" },
+            xaxis: "x3",
             yaxis: "y3"
         };
 
@@ -106,22 +112,32 @@ document.addEventListener("DOMContentLoaded", function () {
             name: "Istogramma",
             type: "bar",
             marker: { color: macdHist.map(v => v >= 0 ? "#2ca02c" : "#d62728") },
+            xaxis: "x3",
             yaxis: "y3"
         };
 
         // === LAYOUT COMPLETO ===
         const layout = {
-            grid: { rows: 3, columns: 1, pattern: "independent", roworder: "top to bottom" },
+            grid: { rows: 3, columns: 1, pattern: "independent" },
             showlegend: true,
             height: 900,
             margin: { t: 50, b: 40 },
             paper_bgcolor: "rgba(0,0,0,0)",
             plot_bgcolor: "rgba(0,0,0,0)",
             font: { color: "#fff" },
+
+            // Asse principale (prezzo)
             xaxis: { showgrid: true },
             yaxis: { title: "Prezzo" },
+
+            // RSI
+            xaxis2: { showgrid: true },
             yaxis2: { title: "RSI", range: [0, 100] },
+
+            // MACD
+            xaxis3: { showgrid: true },
             yaxis3: { title: "MACD" },
+
             shapes: [...rsiShapes]
         };
 
@@ -131,7 +147,16 @@ document.addEventListener("DOMContentLoaded", function () {
             modeBarButtonsToRemove: ["lasso2d", "select2d"]
         };
 
-        const allTraces = [tracePrice, traceSMA20, traceSMA50, traceRSI, traceMACD, traceMACDSignal, traceMACDHist];
+        const allTraces = [
+            tracePrice,
+            traceSMA20,
+            traceSMA50,
+            traceRSI,
+            traceMACD,
+            traceMACDSignal,
+            traceMACDHist
+        ];
+
         Plotly.newPlot("chart", allTraces, layout, config);
     }
 

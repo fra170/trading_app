@@ -55,7 +55,6 @@ def update_data():
 @app.route("/")
 def index():
     """Pagina principale."""
-    # Aggiorna almeno una volta i dati all'avvio della pagina
     global DATA
     if not DATA:
         for t in TICKERS:
@@ -72,7 +71,30 @@ def get_data(ticker):
     ticker = ticker.upper()
     if ticker in DATA:
         return jsonify(DATA[ticker])
-    return jsonify({"error": "Ticker non trovato"}), 404
+    try:
+        DATA[ticker] = fetch_ticker_data(ticker)
+        return jsonify(DATA[ticker])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404
+
+
+@app.route("/tickers", methods=["GET"])
+def get_tickers():
+    """Restituisce l'elenco corrente dei titoli monitorati."""
+    return jsonify(TICKERS)
+
+
+@app.route("/tickers/add/<ticker>", methods=["POST"])
+def add_ticker(ticker):
+    """Aggiunge un nuovo titolo alla lista."""
+    ticker = ticker.upper()
+    if ticker not in TICKERS:
+        TICKERS.append(ticker)
+        try:
+            DATA[ticker] = fetch_ticker_data(ticker)
+        except Exception as e:
+            print(f"❌ Errore caricamento {ticker}: {e}")
+    return jsonify({"tickers": TICKERS})
 
 
 if __name__ == "__main__":

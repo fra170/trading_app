@@ -1,52 +1,43 @@
-# signals.py
 import pandas as pd
-import ta
-
-def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    # Calcola indicatori
-    df["SMA_20"] = ta.trend.SMAIndicator(df["Close"], window=20).sma_indicator()
-    df["SMA_50"] = ta.trend.SMAIndicator(df["Close"], window=50).sma_indicator()
-    df["SMA_200"] = ta.trend.SMAIndicator(df["Close"], window=200).sma_indicator()
-
-    df["RSI"] = ta.momentum.RSIIndicator(df["Close"], window=14).rsi()
-    macd = ta.trend.MACD(df["Close"])
-    df["MACD"] = macd.macd()
-    df["MACD_SIGNAL"] = macd.macd_signal()
-
-    boll = ta.volatility.BollingerBands(df["Close"])
-    df["BOLL_UP"] = boll.bollinger_hband()
-    df["BOLL_DOWN"] = boll.bollinger_lband()
-    return df
-
+import ta  # libreria "technical analysis"
 
 def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
-    df = compute_indicators(df.copy())
+    """
+    Calcola gli indicatori tecnici principali (SMA20, SMA50, RSI, MACD)
+    e genera i segnali operativi BUY/SELL.
+    """
 
-    df["Signal"] = ""
+    # --- 1. Medie mobili semplici ---
+    df['SMA_20'] = ta.trend.SMAIndicator(close=df['Close'], window=20).sma_indicator()
+    df['SMA_50'] = ta.trend.SMAIndicator(close=df['Close'], window=50).sma_indicator()
+
+    # --- 2. RSI (Relative Strength Index) ---
+    df['RSI'] = ta.momentum.RSIIndicator(close=df['Close'], window=14).rsi()
+
+    # --- 3. MACD (Moving Average Convergence Divergence) ---
+    macd = ta.trend.MACD(close=df['Close'])
+    df['MACD'] = macd.macd()
+    df['MACD_Signal'] = macd.macd_signal()
+    df['MACD_Hist'] = macd.macd_diff()
+
+    # --- 4. Generazione segnali BUY/SELL in base all'incrocio delle medie mobili ---
+    df['Signal'] = ''
     for i in range(1, len(df)):
-        prev = df.iloc[i - 1]
-        cur = df.iloc[i]
-
-        # --- Segnale di ACQUISTO ---
         if (
-            prev["Close"] < prev["SMA_20"]
-            and cur["Close"] > cur["SMA_20"]
-            and cur["Close"] > cur["SMA_50"]
+            df['SMA_20'].iloc[i] > df['SMA_50'].iloc[i]
+            and df['SMA_20'].iloc[i - 1] <= df['SMA_50'].iloc[i - 1]
         ):
-            df.at[df.index[i], "Signal"] = "BUY"
-
-        # --- Segnale di VENDITA ---
+            df.loc[df.index[i], 'Signal'] = 'BUY'
         elif (
-            prev["Close"] > prev["SMA_20"]
-            and cur["Close"] < cur["SMA_20"]
-            and cur["Close"] < cur["SMA_50"]
+            df['SMA_20'].iloc[i] < df['SMA_50'].iloc[i]
+            and df['SMA_20'].iloc[i - 1] >= df['SMA_50'].iloc[i - 1]
         ):
-            df.at[df.index[i], "Signal"] = "SELL"
+            df.loc[df.index[i], 'Signal'] = 'SELL'
 
-        # Segnali aggiuntivi RSI
-        elif cur["RSI"] > 70:
-            df.at[df.index[i], "Signal"] = "RSI_OVERBOUGHT"
-        elif cur["RSI"] < 30:
-            df.at[df.index[i], "Signal"] = "RSI_OVERSOLD"
+    # --- 5. Pulizia dati (evita NaN o infiniti) ---
+    df = df.replace([float('inf'), float('-inf')], None)
+    df = df.fillna(method='bfill').fillna(method='ffill')
 
     return df
+
+

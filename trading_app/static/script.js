@@ -251,5 +251,35 @@ if (screenWidth < 768) {
   await loadTickers();
   await updateChart();
 });
+// --- Filtraggio periodo visualizzato ---
+document.querySelectorAll(".period-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const days = btn.dataset.days;
+    const ticker = document.getElementById("ticker").value;
+
+    try {
+      const res = await fetch(`/data/${ticker}`);
+      const json = await res.json();
+      let data = json.data;
+
+      if (days !== "all") {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - parseInt(days));
+        data = data.filter(d => new Date(d.Date) >= cutoff);
+      }
+
+      renderChart(data);
+      document.getElementById("lastPrice").textContent = json.last_price || "--";
+      document.getElementById("lastSignal").textContent = json.last_signal || "--";
+      const last = data[data.length - 1];
+      document.getElementById("rsiValue").textContent = last.RSI ? last.RSI.toFixed(2) : "--";
+      document.getElementById("macdValue").textContent = last.MACD ? last.MACD.toFixed(2) : "--";
+
+    } catch (err) {
+      alert("Errore nel filtraggio periodo: " + err);
+    }
+  });
+});
+
 
 

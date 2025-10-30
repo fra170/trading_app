@@ -6,7 +6,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inputTicker = document.getElementById("tickerInput");
   let currentTicker = "MSFT";
 
-  // === Carica lista titoli disponibili ===
+  const priceEl = document.getElementById("lastPrice");
+  const signalEl = document.getElementById("lastSignal");
+  const rsiEl = document.getElementById("rsiValue");
+  const macdEl = document.getElementById("macdValue");
+
+  // === Carica lista titoli ===
   async function loadTickers() {
     const res = await fetch("/tickers");
     const tickers = await res.json();
@@ -20,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     currentTicker = tickers[0];
   }
 
-  // === Aggiunge nuovo titolo dinamicamente ===
+  // === Aggiunge nuovo titolo ===
   addButton.addEventListener("click", async () => {
     const t = inputTicker.value.trim().toUpperCase();
     if (!t) return alert("Inserisci un simbolo valido.");
@@ -31,23 +36,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateChart();
   });
 
-  // === Recupera dati JSON dal server ===
+  // === Recupera dati dal server ===
   async function fetchData() {
     const res = await fetch(`/data/${currentTicker}`);
     const json = await res.json();
     if (!json || !json.data) throw new Error("Dati non disponibili");
-    return json.data;
+    return json;
   }
 
-  // === Disegna il grafico principale ===
+  // === Disegna grafico ===
   async function updateChart() {
     loadingDiv.style.display = "block";
     chartDiv.innerHTML = "";
 
     try {
-      let data = await fetchData();
+      const json = await fetchData();
+      let data = json.data;
+      if (!data || data.length === 0) throw new Error("Nessun dato valido");
 
-      // 🔧 Pulizia e normalizzazione dati
+      // --- Pulizia dati ---
       data = data.filter(d => d.Open && d.High && d.Low && d.Close);
       data.forEach(d => {
         d.MACD = d.MACD ?? 0;
@@ -60,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const dates = data.map(d => d.Date);
 
-      // === CANDELE ===
+      // --- CANDELE ---
       const traceCandles = {
         x: dates,
         open: data.map(d => d.Open),
@@ -74,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yaxis: "y1"
       };
 
-      // === SMA 20 / 50 ===
+      // --- SMA ---
       const traceSMA20 = {
         x: dates,
         y: data.map(d => d.SMA_20),
@@ -95,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yaxis: "y1"
       };
 
-      // === BUY / SELL MARKERS ===
+      // --- BUY / SELL ---
       const buySignals = data.filter(d => d.Signal === "BUY");
       const sellSignals = data.filter(d => d.Signal === "SELL");
 
@@ -123,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yaxis: "y1"
       } : null;
 
-      // === RSI ===
+      // --- RSI ---
       const traceRSI = {
         x: dates,
         y: data.map(d => d.RSI),
@@ -139,7 +146,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         { type: "line", xref: "x", yref: "y2", x0: dates[0], x1: dates[dates.length - 1], y0: 30, y1: 30, line: { color: "green", width: 1, dash: "dash" }}
       ];
 
-      // === MACD ===
+      // --- MACD ---
       const traceMACD = {
         x: dates,
         y: data.map(d => d.MACD),
@@ -169,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yaxis: "y3"
       };
 
-      // === Layout ===
+      // --- Layout ---
       const layout = {
         grid: { rows: 3, columns: 1, pattern: "independent" },
         height: 900,
@@ -188,6 +195,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (traceSELL) traces.push(traceSELL);
 
       Plotly.newPlot(chartDiv, traces, layout, { responsive: true, displaylogo: false });
+
+      // --- Aggiornamento pannello valori ---
+      const last = data[data.length - 1];
+      priceEl.textContent = (last.Close || json.last_price || 0).toFixed(2);
+      rsiEl.textContent = last.RSI ? last.RSI.toFixed(2) : "--";
+      macdEl.textContent = last.MACD ? last.MACD.toFixed(2) : "--";
+
+      // Segnale dinamico colorato
+      const signal = last.Signal || json.last_signal || "--";
+      signalEl.textContent = signal;
+      if (signal === "BUY") signalEl.style.color = "#00e676";
+      else if (signal === "SELL") signalEl.style.color = "#ff5252";
+      else signalEl.style.color = "#ccc";
 
     } catch (err) {
       alert("Errore nel caricamento dati: " + err.message);

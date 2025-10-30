@@ -33,7 +33,7 @@
       flex-wrap: wrap;
     }
 
-    select, button {
+    select, input, button {
       padding: 8px 12px;
       border-radius: 6px;
       border: none;
@@ -41,6 +41,10 @@
       color: white;
       font-size: 0.95em;
       cursor: pointer;
+    }
+
+    input {
+      width: 120px;
     }
 
     button:hover {
@@ -106,7 +110,11 @@
       <option value="MSFT">Microsoft (MSFT)</option>
       <option value="NVDA">NVIDIA (NVDA)</option>
     </select>
+
     <button id="updateButton">Aggiorna Grafico</button>
+
+    <input type="text" id="newTicker" placeholder="Nuovo simbolo (es. TSLA)">
+    <button id="addTicker">➕ Aggiungi</button>
   </div>
 
   <div id="period-controls">
@@ -127,6 +135,7 @@
   <div id="chart"></div>
   <div id="loading">Caricamento in corso...</div>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
+

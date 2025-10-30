@@ -147,7 +147,18 @@ document.addEventListener("DOMContentLoaded", () => {
       modeBarButtonsToRemove: ["lasso2d", "select2d"]
     };
 
-    const allTraces = [tracePrice, traceSMA20, traceSMA50, traceRSI, traceMACD, traceMACDSignal, traceMACDHist];
+    const allTraces = [
+  tracePrice,
+  traceSMA20,
+  traceSMA50,
+  traceBuy,
+  traceSell,
+  traceRSI,
+  traceMACD,
+  traceMACDSignal,
+  traceMACDHist
+];
+
     Plotly.newPlot("chart", allTraces, layout, config);
   }
 
@@ -236,5 +247,6 @@ document.getElementById("addTicker").addEventListener("click", () => {
   document.getElementById("newTicker").value = "";
   updateChart();
 });
+
 
 

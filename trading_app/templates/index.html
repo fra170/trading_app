@@ -4,59 +4,73 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Trading</title>
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     body {
       background-color: #111;
-      color: #eee;
-      font-family: Arial, sans-serif;
+      color: #fff;
+      font-family: "Segoe UI", Arial, sans-serif;
       margin: 0;
-      padding: 20px;
-      text-align: center;
+      padding: 0;
     }
 
-    h1 {
-      margin-bottom: 10px;
-      color: #00bcd4;
+    header {
+      text-align: center;
+      padding: 15px;
+      background-color: #1e1e1e;
+      font-size: 1.6em;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
     #ticker-controls {
-      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
     }
 
-    #ticker-controls input {
-      padding: 8px;
-      font-size: 14px;
-      border-radius: 5px;
-      border: 1px solid #555;
+    #ticker-controls input, #ticker-controls select, #ticker-controls button {
+      padding: 8px 10px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+    }
+
+    #ticker-controls input, #ticker-controls select {
       background-color: #222;
       color: #fff;
-      width: 140px;
     }
 
     #ticker-controls button {
-      padding: 8px 12px;
       background-color: #00bcd4;
-      border: none;
-      border-radius: 5px;
       color: white;
-      font-weight: bold;
       cursor: pointer;
-      margin-left: 5px;
+      transition: 0.2s;
     }
 
     #ticker-controls button:hover {
       background-color: #0097a7;
     }
 
-    #tickerSelect {
-      margin-left: 10px;
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #555;
-      background-color: #222;
-      color: #fff;
+    #info-panel {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 15px;
+      text-align: center;
+      margin: 10px 15px;
+      font-size: 1.05em;
+    }
+
+    #info-panel div {
+      background-color: #1c1c1c;
+      padding: 8px 12px;
+      border-radius: 8px;
+      min-width: 140px;
     }
 
     #chart {
@@ -64,42 +78,39 @@
       height: 900px;
     }
 
-    .info {
-      margin-top: 20px;
-      font-size: 18px;
-      text-align: left;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.6;
-    }
-
-    .info span {
-      color: #00e676;
-      font-weight: bold;
+    #loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 1.1em;
+      color: #aaa;
     }
   </style>
 </head>
 
 <body>
-  <h1>📈 Dashboard Trading</h1>
+  <header>📈 Dashboard Trading</header>
 
+  <!-- 🔹 Controlli titoli -->
   <div id="ticker-controls">
+    <select id="tickerSelect"></select>
     <input type="text" id="tickerInput" placeholder="Es. TSLA o ENI.MI">
     <button id="addTicker">➕ Aggiungi titolo</button>
-    <select id="tickerSelect"></select>
   </div>
 
-  <div id="loading">Caricamento in corso...</div>
+  <!-- 🔹 Pannello informazioni -->
+  <div id="info-panel">
+    <div><strong>💰 Prezzo attuale:</strong> <span id="lastPrice">--</span></div>
+    <div><strong>📊 Segnale:</strong> <span id="lastSignal">--</span></div>
+    <div><strong>📈 RSI:</strong> <span id="rsiValue">--</span></div>
+    <div><strong>📉 MACD:</strong> <span id="macdValue">--</span></div>
+  </div>
+
+  <!-- 🔹 Grafico -->
   <div id="chart"></div>
-
-  <div class="info">
-    <p>Prezzo attuale: <span id="lastPrice">--</span></p>
-    <p>Segnale: <span id="lastSignal">--</span></p>
-    <p>RSI: <span id="rsiValue">--</span></p>
-    <p>MACD: <span id="macdValue">--</span></p>
-  </div>
+  <div id="loading">Caricamento in corso...</div>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
+
+

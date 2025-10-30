@@ -38,17 +38,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const macdSignal = data.map(d => d.MACD_Signal);
     const macdHist = data.map(d => d.MACD_Hist);
 
-    // === GRAFICO PREZZO PRINCIPALE ===
-    const tracePrice = {
-      x: dates,
-      y: close,
-      type: "scatter",
-      mode: "lines",
-      name: "Prezzo",
-      line: { color: "#00e676", width: 2 },
-      yaxis: "y1"
-    };
-
+  // === GRAFICO CANDELE PRINCIPALE ===
+const tracePrice = {
+  x: dates,
+  open: data.map(d => d.Open),
+  high: data.map(d => d.High),
+  low: data.map(d => d.Low),
+  close: data.map(d => d.Close),
+  type: "candlestick",
+  name: "Prezzo",
+  increasing: { line: { color: "#00e676" }, fillcolor: "#00e676" },
+  decreasing: { line: { color: "#e53935" }, fillcolor: "#e53935" },
+  yaxis: "y1"
+};
+ 
     const traceSMA20 = {
       x: dates,
       y: sma20,
@@ -157,5 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Caricamento iniziale
   updateChart();
 });
+
 
 

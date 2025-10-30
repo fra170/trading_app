@@ -1,43 +1,41 @@
 import pandas as pd
-import ta  # libreria "technical analysis"
+import numpy as np
+import ta  # libreria 'technical analysis'
 
 def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Calcola gli indicatori tecnici principali (SMA20, SMA50, RSI, MACD)
-    e genera i segnali operativi BUY/SELL.
-    """
+    """Genera segnali BUY e SELL in base a incrocio medie mobili e RSI."""
 
-    # --- 1. Medie mobili semplici ---
-    df['SMA_20'] = ta.trend.SMAIndicator(close=df['Close'], window=20).sma_indicator()
-    df['SMA_50'] = ta.trend.SMAIndicator(close=df['Close'], window=50).sma_indicator()
+    # --- Calcolo indicatori tecnici ---
+    df["SMA_20"] = ta.trend.SMAIndicator(df["Close"], window=20).sma_indicator()
+    df["SMA_50"] = ta.trend.SMAIndicator(df["Close"], window=50).sma_indicator()
+    df["RSI"] = ta.momentum.RSIIndicator(df["Close"], window=14).rsi()
+    macd = ta.trend.MACD(df["Close"])
+    df["MACD"] = macd.macd()
+    df["MACD_Signal"] = macd.macd_signal()
+    df["MACD_Hist"] = macd.macd_diff()
 
-    # --- 2. RSI (Relative Strength Index) ---
-    df['RSI'] = ta.momentum.RSIIndicator(close=df['Close'], window=14).rsi()
+    # --- Inizializza la colonna dei segnali ---
+    df["Signal"] = ""
 
-    # --- 3. MACD (Moving Average Convergence Divergence) ---
-    macd = ta.trend.MACD(close=df['Close'])
-    df['MACD'] = macd.macd()
-    df['MACD_Signal'] = macd.macd_signal()
-    df['MACD_Hist'] = macd.macd_diff()
-
-    # --- 4. Generazione segnali BUY/SELL in base all'incrocio delle medie mobili ---
-    df['Signal'] = ''
+    # --- Ciclo di generazione segnali ---
     for i in range(1, len(df)):
-        if (
-            df['SMA_20'].iloc[i] > df['SMA_50'].iloc[i]
-            and df['SMA_20'].iloc[i - 1] <= df['SMA_50'].iloc[i - 1]
-        ):
-            df.loc[df.index[i], 'Signal'] = 'BUY'
-        elif (
-            df['SMA_20'].iloc[i] < df['SMA_50'].iloc[i]
-            and df['SMA_20'].iloc[i - 1] >= df['SMA_50'].iloc[i - 1]
-        ):
-            df.loc[df.index[i], 'Signal'] = 'SELL'
+        prev_fast = df["SMA_20"].iloc[i-1]
+        prev_slow = df["SMA_50"].iloc[i-1]
+        curr_fast = df["SMA_20"].iloc[i]
+        curr_slow = df["SMA_50"].iloc[i]
+        curr_rsi = df["RSI"].iloc[i]
 
-    # --- 5. Pulizia dati (evita NaN o infiniti) ---
-    df = df.replace([float('inf'), float('-inf')], None)
+        # BUY: incrocio verso l'alto e RSI < 70
+        if prev_fast < prev_slow and curr_fast > curr_slow and curr_rsi < 70:
+            df.at[df.index[i], "Signal"] = "BUY"
+
+        # SELL: incrocio verso il basso e RSI > 30
+        elif prev_fast > prev_slow and curr_fast < curr_slow and curr_rsi > 30:
+            df.at[df.index[i], "Signal"] = "SELL"
+
+    # --- Riempie eventuali valori mancanti ---
     df = df.fillna(method='bfill').fillna(method='ffill')
-
     return df
+
 
 

@@ -45,24 +45,26 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const traceSMA50 = {
-      x: dates,
-      y: sma50,
-      type: "scatter",
-      mode: "lines",
-      line: { color: "#ff7f0e", width: 1.2 },
-      name: "SMA 50",
+      // === SEGNALI BUY / SELL ===
+    const buySignals = data.filter(d => d.Signal === "BUY");
+    const sellSignals = data.filter(d => d.Signal === "SELL");
+
+    const traceBuy = {
+      x: buySignals.map(d => d.Date),
+      y: buySignals.map(d => d.Close),
+      mode: "markers",
+      name: "BUY",
+      marker: { color: "#00ff00", size: 10, symbol: "triangle-up" },
       yaxis: "y"
     };
 
-    // === GRAFICO RSI ===
-    const traceRSI = {
-      x: dates,
-      y: rsi,
-      name: "RSI",
-      type: "scatter",
-      mode: "lines",
-      line: { color: "#9467bd", width: 1.5 },
-      yaxis: "y2"
+    const traceSell = {
+      x: sellSignals.map(d => d.Date),
+      y: sellSignals.map(d => d.Close),
+      mode: "markers",
+      name: "SELL",
+      marker: { color: "#ff0000", size: 10, symbol: "triangle-down" },
+      yaxis: "y"
     };
 
     const rsiShapes = [
@@ -234,4 +236,5 @@ document.getElementById("addTicker").addEventListener("click", () => {
   document.getElementById("newTicker").value = "";
   updateChart();
 });
+
 

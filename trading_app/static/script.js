@@ -206,3 +206,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Caricamento iniziale ---
   updateChart();
 });
+// --- Aggiungi nuovo titolo dinamicamente ---
+document.getElementById("addTicker").addEventListener("click", () => {
+  const newTicker = document.getElementById("newTicker").value.trim().toUpperCase();
+  const select = document.getElementById("ticker");
+
+  if (!newTicker) {
+    alert("Inserisci un simbolo valido (es. TSLA, GOOG, AMZN)");
+    return;
+  }
+
+  // Evita duplicati
+  const exists = Array.from(select.options).some(opt => opt.value === newTicker);
+  if (exists) {
+    alert("Questo simbolo è già presente nella lista.");
+    return;
+  }
+
+  // Aggiungi nuova opzione
+  const opt = document.createElement("option");
+  opt.value = newTicker;
+  opt.textContent = newTicker;
+  select.appendChild(opt);
+
+  // Seleziona subito il nuovo ticker e aggiorna grafico
+  select.value = newTicker;
+  document.getElementById("newTicker").value = "";
+  updateChart();
+});
+
